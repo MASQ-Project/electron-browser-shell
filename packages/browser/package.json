@@ -11,9 +11,8 @@
         "publish": "electron-forge publish",
         "lint": "echo \"No linting configured\""
     },
-    "keywords": [],
-    "author": "Trinkerin",
-    "license": "MIT",
+    "license": "GPL-3.0",
+    "author": "Samuel Maddock <sam@samuelmaddock.com>",
     "devDependencies": {
         "@babel/core": "^7.22.1",
         "@babel/preset-env": "^7.22.4",

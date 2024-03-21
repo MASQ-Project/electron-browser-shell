@@ -1,6 +1,6 @@
 {
-    "name": "electron-chrome-extensions",
-    "version": "3.9.13-alpha.0",
+    "name": "@masq-project/electron-chrome-extensions",
+    "version": "1.0.0",
     "description": "Chrome extension support for Electron",
     "main": "dist/index.js",
     "scripts": {
@@ -15,7 +15,7 @@
         "chrome",
         "extensions"
     ],
-    "repository": "https://github.com/RabbyHub/electron-desktop-shell",
+    "repository": "https://github.com/MASQ-Project/electron-browser-shell",
     "author": "Samuel Maddock <sam@samuelmaddock.com>",
     "license": "SEE LICENSE IN LICENSE.md",
     "files": [

@@ -1,8 +1,8 @@
 {
-    "name": "electron-chromeapi-suite",
-    "productName": "electron-chromeapi-suite",
+    "name": "electron-browser-shell",
+    "productName": "electron-browser-shell",
     "version": "1.0.0",
-    "description": "electron-chromeapi-suite",
+    "description": "electron-browser-shell",
     "main": ".webpack/main",
     "private": "true",
     "workspaces": [
@@ -16,9 +16,11 @@
         "start:debug": "cross-env DEBUG='electron-chrome-extensions:*' yarn start",
         "start:debugAll": "cross-env DEBUG='*' yarn start"
     },
-    "keywords": [],
-    "author": "Trinkerin",
-    "license": "MIT",
+    "license": "GPL-3.0",
+    "author": "Samuel Maddock <sam@samuelmaddock.com>",
+    "contributors": [
+        "MASQ-Project"
+    ],
     "devDependencies": {
         "cross-env": "^7.0.3",
         "eslint": "^8.40.0",
