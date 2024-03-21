@@ -1,0 +1,70 @@
+.window_controller {
+    -webkit-app-region: no-drag;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: space-evenly;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    z-index: 100000;
+}
+
+.window_controller__right {
+    left: auto;
+    right: 0px;
+}
+
+.window_control_button {
+    height: 100%;
+    width: 45px;
+    min-width: 45px;
+    position: relative;
+    transition: 0.2s background-color;
+    background-color: transparent;
+    pointer-events: auto;
+}
+
+.window_control_button:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    @media (prefers-color-scheme: light) {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+}
+.window_control_button__close:hover {
+    background-color: rgb(232, 17, 35);
+}
+
+.window_control_icon {
+    width: 100%;
+    height: 100%;
+    transition: 0.2s filter;
+    filter: none;
+    background-position: center;
+    background-size: 11px;
+    background-repeat: no-repeat;
+    opacity: 0.5;
+    @media (prefers-color-scheme: light) {
+        filter: invert(100%);
+    }
+}
+
+.window_control_icon__close {
+    background-image: url('../../assets/images/WindowControls/close.svg');
+}
+
+.window_control_icon__minimize {
+    background-image: url('../../assets/images/WindowControls/minimize.svg');
+}
+
+.window_control_icon__maximize {
+    background-image: url('../../assets/images/WindowControls/maximize.svg');
+}
+
+.window_control_icon__restore {
+    background-image: url('../../assets/images/WindowControls/restore.svg');
+}
+
+.window_control_icon:hover {
+    opacity: 1;
+}

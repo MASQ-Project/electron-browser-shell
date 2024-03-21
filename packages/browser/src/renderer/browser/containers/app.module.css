@@ -1,0 +1,41 @@
+.main_container {
+    margin-top: 92px;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.browser_actions {
+    display: flex;
+    flex-direction: row-reverse;
+    min-height: 32px;
+}
+
+/* Layout action buttons vertically. */
+browser-action-list {
+    /* flex-direction: column; */
+}
+
+/* Modify size of action buttons. */
+browser-action-list::part(action) {
+    width: 32px;
+    height: 32px;
+}
+
+/* Modify hover styles of action buttons. */
+browser-action-list::part(action):hover {
+    /* background-color: red;
+    border-radius: 0; */
+}
+
+.tab_container {
+    width: 100%;
+    height: 100%;
+}
+
+.tab_buttons {
+    display: flex;
+    gap: 0.5rem;
+}

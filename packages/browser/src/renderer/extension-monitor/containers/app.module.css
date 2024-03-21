@@ -1,0 +1,21 @@
+.app {
+    margin-top: 72px;
+}
+
+section {
+    display: table;
+    width: 100%;
+}
+
+section > * {
+    display: table-row;
+}
+
+section .col {
+    display: table-cell;
+    padding: 2px;
+}
+
+section .header {
+    font-weight: 800;
+}

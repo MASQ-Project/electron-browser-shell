@@ -16,7 +16,7 @@ npm install electron-chrome-extensions
 
 | uBlock Origin | Dark Reader |
 |---|---|
-| <img src="https://raw.githubusercontent.com/samuelmaddock/electron-browser-shell/master/packages/electron-chrome-extensions/screenshot-ublock-origin.png" width="405"> | <img src="https://raw.githubusercontent.com/samuelmaddock/electron-browser-shell/master/packages/electron-chrome-extensions/screenshot-dark-reader.png" width="391"> |
+| <img src="https://raw.githubusercontent.com/RabbyHub/electron-desktop-shell/master/packages/electron-chrome-extensions/screenshot-ublock-origin.png" width="405"> | <img src="https://raw.githubusercontent.com/RabbyHub/electron-desktop-shell/master/packages/electron-chrome-extensions/screenshot-dark-reader.png" width="391"> |
 
 ## Usage
 
@@ -46,7 +46,7 @@ const { ElectronChromeExtensions } = require('electron-chrome-extensions')
 
 Multi-tab browser with full support for Chrome extension APIs.
 
-> For a complete example, see the [`electron-browser-shell`](https://github.com/samuelmaddock/electron-browser-shell) project.
+> For a complete example, see the [`electron-desktop-shell`](https://github.com/RabbyHub/electron-desktop-shell) project.
 
 ```js
 const { app, session, BrowserWindow } = require('electron')
@@ -101,6 +101,7 @@ const { ElectronChromeExtensions } = require('electron-chrome-extensions')
 
 * `options` Object (optional)
   * `modulePath` String (optional) - Path to electron-chrome-extensions module files. Might be needed if JavaScript bundlers like Webpack are used in your build process.
+  * `preloadPath` String (optional) - Path to [`preload.js`] compiled from (./src/preload.ts), which just inject extensions APIs for `chrome-extension://`. We might want to customize path to our customized `preload.js` which includes `import '@rabby-wallet/electron-chrome-extensions/dist/preload'`. If not provided, default to `<modulePath>/dist/preload.js`
   * `session` Electron.Session (optional) - Session which should support
     Chrome extension APIs. `session.defaultSession` is used by default.
   * `createTab(details) => Promise<[Electron.WebContents, Electron.BrowserWindow]>` (optional) -
@@ -140,7 +141,7 @@ new ElectronChromeExtensions({
 ```
 
 For a complete usage example, see the browser implementation in the
-[`electron-browser-shell`](https://github.com/samuelmaddock/electron-browser-shell/blob/master/packages/shell/browser/main.js)
+[`electron-desktop-shell`](https://github.com/RabbyHub/electron-desktop-shell/blob/master/packages/shell/browser/main.js)
 project.
 
 #### Instance Methods
@@ -179,7 +180,7 @@ Emitted when a popup is created by the `chrome.browserAction` API.
 
 ### Element: `<browser-action-list>`
 
-<img src="https://raw.githubusercontent.com/samuelmaddock/electron-browser-shell/master/packages/electron-chrome-extensions/screenshot-browser-action.png" width="438">
+<img src="https://raw.githubusercontent.com/RabbyHub/electron-desktop-shell/master/packages/electron-chrome-extensions/screenshot-browser-action.png" width="438">
 
 The `<browser-action-list>` element provides a row of [browser actions](https://developer.chrome.com/extensions/browserAction) which may be pressed to activate the `chrome.browserAction.onClicked` event or display the extension popup.
 
@@ -405,4 +406,4 @@ See [Electron's Notification tutorial](https://www.electronjs.org/docs/tutorial/
 
 GPL-3
 
-For proprietary use, please [contact me](mailto:sam@samuelmaddock.com?subject=electron-chrome-extensions%20license) or [sponsor me on GitHub](https://github.com/sponsors/samuelmaddock/) under the appropriate tier to [acquire a proprietary-use license](https://github.com/samuelmaddock/electron-browser-shell/blob/master/LICENSE-PATRON.md). These contributions help make development and maintenance of this project more sustainable and show appreciation for the work thus far.
+For proprietary use, please [contact me](mailto:sam@samuelmaddock.com?subject=electron-chrome-extensions%20license) or [sponsor me on GitHub](https://github.com/sponsors/samuelmaddock/) under the appropriate tier to [acquire a proprietary-use license](https://github.com/RabbyHub/electron-desktop-shell/blob/master/LICENSE-PATRON.md). These contributions help make development and maintenance of this project more sustainable and show appreciation for the work thus far.

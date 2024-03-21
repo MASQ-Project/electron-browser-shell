@@ -292,22 +292,7 @@ export class BrowserActionAPI {
   private getPopupUrl(extensionId: string, tabId: number) {
     const action = this.getAction(extensionId)
     const popupPath = action.tabs[tabId]?.popup || action.popup || undefined
-
-    let url: string | undefined
-
-    // Allow absolute URLs
-    try {
-      url = popupPath && new URL(popupPath).href
-    } catch {}
-
-    // Fallback to relative path
-    if (!url) {
-      try {
-        url = popupPath && new URL(popupPath, `chrome-extension://${extensionId}`).href
-      } catch {}
-    }
-
-    return url
+    return popupPath && `chrome-extension://${extensionId}/${popupPath}`
   }
 
   // TODO: Make private for v4 major release.
@@ -342,11 +327,11 @@ export class BrowserActionAPI {
     return { activeTabId: activeTab?.id, actions }
   }
 
-  private activate({ sender }: ExtensionEvent, details: ActivateDetails) {
+  private activate(extEvt: ExtensionEvent, details: ActivateDetails) {
     const { eventType, extensionId, tabId } = details
 
     debug(
-      `activate [eventType: ${eventType}, extensionId: '${extensionId}', tabId: ${tabId}, senderId: ${sender.id}]`
+      `activate [eventType: ${eventType}, extensionId: '${extensionId}', tabId: ${tabId}, senderId: ${extEvt.sender.id}]`
     )
 
     switch (eventType) {
@@ -354,7 +339,7 @@ export class BrowserActionAPI {
         this.activateClick(details)
         break
       case 'contextmenu':
-        this.activateContextMenu(details)
+        this.activateContextMenu(details, extEvt)
         break
       default:
         console.debug(`Ignoring unknown browserAction.activate event '${eventType}'`)
@@ -407,7 +392,7 @@ export class BrowserActionAPI {
     }
   }
 
-  private activateContextMenu(details: ActivateDetails) {
+  private activateContextMenu(details: ActivateDetails, event: ExtensionEvent) {
     const { extensionId, anchorRect } = details
 
     const extension = this.ctx.session.getExtension(extensionId)
@@ -425,7 +410,7 @@ export class BrowserActionAPI {
       click: () => {
         const homePageUrl =
           manifest.homepage_url || `https://chrome.google.com/webstore/detail/${extension.id}`
-        this.ctx.store.createTab({ url: homePageUrl })
+        this.ctx.store.createTab({ url: homePageUrl }, event)
       },
     })
 
@@ -447,19 +432,9 @@ export class BrowserActionAPI {
       label: 'Options',
       enabled: typeof optionsPageUrl === 'string',
       click: () => {
-        this.ctx.store.createTab({ url: optionsPageUrl })
+        this.ctx.store.createTab({ url: optionsPageUrl }, event)
       },
     })
-
-    if (process.env.NODE_ENV === 'development' && process.env.DEBUG) {
-      append({
-        label: 'Remove extension',
-        click: () => {
-          debug(`removing extension "${extension.name}" (${extension.id})`)
-          this.ctx.session.removeExtension(extension.id)
-        },
-      })
-    }
 
     menu.popup({
       x: Math.floor(anchorRect.x),

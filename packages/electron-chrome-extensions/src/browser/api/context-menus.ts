@@ -177,7 +177,7 @@ export class ContextMenusAPI {
   ): Electron.MenuItem[] {
     if (webContents.session !== this.ctx.session) return []
 
-    let menuItemOptions: ContextItemConstructorOptions[] = []
+    const menuItemOptions = []
 
     const conditions = {
       contextTypes: getContextTypesFromParams(params),
@@ -189,8 +189,6 @@ export class ContextMenusAPI {
       const extension = this.ctx.session.getExtension(extensionId)
       if (!extension) continue
 
-      const extensionMenuItemOptions: ContextItemConstructorOptions[] = []
-
       for (const [, props] of propItems) {
         if (matchesConditions(props, conditions)) {
           const menuItem = {
@@ -198,45 +196,10 @@ export class ContextMenusAPI {
             props,
             webContents,
             params,
+            showIcon: true,
           }
-          extensionMenuItemOptions.push(menuItem)
+          menuItemOptions.push(menuItem)
         }
-      }
-
-      const topLevelItems = extensionMenuItemOptions.filter((opt) => !opt.props.parentId)
-
-      if (topLevelItems.length > 1) {
-        // Create new top-level item to group children
-        const groupId = `group${extension.id}`
-        const groupMenuItemOptions: ContextItemConstructorOptions = {
-          extension,
-          webContents,
-          props: {
-            id: groupId,
-            title: extension.name,
-          },
-          params,
-          showIcon: true,
-        }
-
-        // Reassign children to group item
-        const children = extensionMenuItemOptions.map((opt) =>
-          opt.props.parentId
-            ? opt
-            : {
-                ...opt,
-                props: {
-                  ...opt.props,
-                  parentId: groupId,
-                },
-              }
-        )
-
-        menuItemOptions = [...menuItemOptions, groupMenuItemOptions, ...children]
-      } else if (extensionMenuItemOptions.length > 0) {
-        // Set all children to show icon
-        const children = extensionMenuItemOptions.map((opt) => ({ ...opt, showIcon: true }))
-        menuItemOptions = [...menuItemOptions, ...children]
       }
     }
 

@@ -1,0 +1,39 @@
+.container {
+    width: 100%;
+    height: 1200px;
+    display: none;
+    flex-direction: column;
+    border-radius: 30px;
+    overflow: hidden;
+    background-color: aquamarine;
+    box-sizing: border-box;
+}
+
+.container_selected {
+    composes: container;
+    display: flex;
+}
+
+.controls {
+    height: 72px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-inline: 18px;
+}
+
+.left {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.webview {
+    width: 100%;
+    height: 100%;
+    background-color: beige;
+}
+
+input {
+    width: 320px;
+}

@@ -36,5 +36,3 @@ chrome.tabs.query({ active: true, windowId: chrome.windows.WINDOW_ID_CURRENT }, 
   activeTabId = tab.id
   logEvent()
 })
-
-console.log('background-script-evaluated')

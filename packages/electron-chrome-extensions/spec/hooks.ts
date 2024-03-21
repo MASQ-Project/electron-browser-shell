@@ -1,21 +1,15 @@
-import { ipcMain, BrowserWindow, app, Extension, webContents } from 'electron'
+import { ipcMain, BrowserWindow, app, Extension } from 'electron'
 import * as http from 'http'
 import * as path from 'path'
 import { AddressInfo } from 'net'
-import { ElectronChromeExtensions } from '../dist'
+import { ChromeExtensionOptions, ElectronChromeExtensions } from '../dist'
 import { emittedOnce } from './events-helpers'
-import { addCrxPreload, createCrxSession, waitForBackgroundScriptEvaluated } from './crx-helpers'
+import { addCrxPreload, createCrxSession } from './crx-helpers'
+
+const DEBUG_RPC_UI = !!process.env.DEBUG_RPC_UI;
 
 export const useServer = () => {
-  const emptyPage = `<!DOCTYPE html>
-<html>
-  <head>
-    <title>title</title>
-  </head>
-  <body>
-  <script>console.log("loaded")</script>
-  </body>
-</html>`
+  const emptyPage = '<script>console.log("loaded")</script>'
 
   // NB. extensions are only allowed on http://, https:// and ftp:// (!) urls by default.
   let server: http.Server
@@ -23,12 +17,11 @@ export const useServer = () => {
 
   before(async () => {
     server = http.createServer((req, res) => {
-      res.writeHead(200, { 'Content-Type': 'text/html' })
       res.end(emptyPage)
     })
     await new Promise<void>((resolve) =>
       server.listen(0, '127.0.0.1', () => {
-        url = `http://127.0.0.1:${(server.address() as AddressInfo).port}/`
+        url = `http://127.0.0.1:${(server.address() as AddressInfo).port}`
         resolve()
       })
     )
@@ -49,6 +42,9 @@ export const useExtensionBrowser = (opts: {
   file?: string
   extensionName: string
   openDevTools?: boolean
+  browserWindowOptions?: Electron.BrowserWindowConstructorOptions
+  contentScriptsReady?: string | false
+  chromeExtensionOptions?: ChromeExtensionOptions
 }) => {
   let w: Electron.BrowserWindow
   let extensions: ElectronChromeExtensions
@@ -56,7 +52,15 @@ export const useExtensionBrowser = (opts: {
   let partition: string
   let customSession: Electron.Session
 
+  const waitings: Promise<any>[] = []
+
+  before(async () => {
+    await Promise.all(waitings);
+  })
+
   beforeEach(async () => {
+    const eachWatings: Promise<any>[] = []
+
     const sessionDetails = createCrxSession()
 
     partition = sessionDetails.partition
@@ -65,20 +69,38 @@ export const useExtensionBrowser = (opts: {
     addCrxPreload(customSession)
 
     extensions = new ElectronChromeExtensions({
-      session: customSession,
-      async createTab(details) {
-        const tab = (webContents as any).create({ sandbox: true })
-        if (details.url) await tab.loadURL(details.url)
-        return [tab, w!]
-      },
+      ...opts?.chromeExtensionOptions,
+      session: customSession
     })
 
+    /**
+     * @description In most REAL cases, we just send ipc message to main process or invoke main process method.
+     * we don't need wait for 3rd-parties' content_scripts ready (because we forbid them to communicate with main process).
+     * 
+     * In these unit tests, some extensions loaded to test if call chains of mv2 below works:
+     * 
+     * 1. content_scripts -- chrome.runtime.sendMessage --> background.js
+     * 2. background.js -- call --> main process
+     * 3. main -- reply -> background.js
+     * 4. background.js -- reply -> content_scripts
+     * 
+     * This workflow are not allowed in 3rd party extensions by default. so we don't worry if the content_scripts ready.
+     */
+    if (opts.contentScriptsReady) {
+      eachWatings.push(emittedOnce(ipcMain, opts.contentScriptsReady))
+    }
     extension = await customSession.loadExtension(path.join(fixtures, opts.extensionName))
-    await waitForBackgroundScriptEvaluated(extension, customSession)
 
     w = new BrowserWindow({
-      show: false,
-      webPreferences: { session: customSession, nodeIntegration: false, contextIsolation: true },
+      show: DEBUG_RPC_UI,
+      ...opts.browserWindowOptions,
+      webPreferences: {
+        session: customSession,
+        nodeIntegration: false,
+        sandbox: true,
+        contextIsolation: true,
+        ...opts.browserWindowOptions?.webPreferences,
+      },
     })
 
     if (opts.openDevTools) {
@@ -92,6 +114,9 @@ export const useExtensionBrowser = (opts: {
     } else if (opts.url) {
       await w.loadURL(opts.url())
     }
+    
+    if (eachWatings.length)
+      await Promise.all(eachWatings);
   })
 
   afterEach(() => {
@@ -125,20 +150,54 @@ export const useExtensionBrowser = (opts: {
     },
 
     crx: {
-      async exec(method: string, ...args: any[]) {
-        const p = emittedOnce(ipcMain, 'success')
-        const rpcStr = JSON.stringify({ type: 'api', method, args })
-        const safeRpcStr = rpcStr.replace(/'/g, "\\'")
-        const js = `exec('${safeRpcStr}')`
-        await w.webContents.executeJavaScript(js)
+      async execRpc(method: string, ...args: any[]) {
+        const p = emittedOnce(ipcMain, 'rpc-exec-success')
+        await w.webContents.executeJavaScript(
+          `exec('${JSON.stringify({ type: 'rpc-call-api', method, args })}')`
+        )
         const [, result] = await p
         return result
       },
 
-      async eventOnce(eventName: string) {
-        const p = emittedOnce(ipcMain, 'success')
+      /**
+       * @description call method in extension `rpc`'s html page
+       */
+      async callInRpcExtUI(method: string, ...args: any[]) {
+        if (extension.name !== 'chrome-rpc') {
+          throw new Error('[callInRpcExtUI] extension name should be "chrome-rpc"')
+        } else {
+          console.log('[callInRpcExtUI] extension info:', extension);
+        }
+        const prevURL = w.webContents.getURL();
+        w.webContents.loadURL(`chrome-extension://${extension.id}/index.html`);
+
+        const p = emittedOnce(ipcMain, 'rpc-fast-success')
+
         await w.webContents.executeJavaScript(
-          `exec('${JSON.stringify({ type: 'event-once', name: eventName })}')`
+          `(async function () {
+            var method = "${method}";
+            var args = JSON.parse("${JSON.stringify(args)}");
+            // window.args = args;
+            var [apiName, subMethod] = method.split('.')
+
+            if (typeof chrome[apiName][subMethod] === 'function') {
+              var results = await chrome[apiName][subMethod](...args)
+              electronTest.sendIpc('rpc-fast-success', results)
+            }
+          })();`
+        )
+
+        const [, result] = await p
+        console.log('[callInRpcExtUI] result:', result);
+
+        w.webContents.loadURL(prevURL);
+        return result;
+      },
+
+      async rpcEventOnce(eventName: string) {
+        const p = emittedOnce(ipcMain, 'rpc-exec-success')
+        await w.webContents.executeJavaScript(
+          `exec('${JSON.stringify({ type: 'rpc-fast-event-once', name: eventName })}')`
         )
         const [, results] = await p
 

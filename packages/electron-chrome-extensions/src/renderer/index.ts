@@ -330,6 +330,10 @@ export const injectExtensionAPIs = () => {
           const api = {
             ...base,
             create: invokeExtension('tabs.create'),
+            /**
+             * @see https://developer.chrome.com/docs/extensions/reference/tabs/#method-executeScript
+             * @deprecated since chrome 91
+             */
             executeScript: function (arg1: unknown, arg2: unknown, arg3: unknown) {
               // Electron's implementation of chrome.tabs.executeScript is in
               // C++, but it doesn't support implicit execution in the active
@@ -337,7 +341,7 @@ export const injectExtensionAPIs = () => {
               // pass it into the C++ implementation ourselves.
               if (typeof arg1 === 'object') {
                 api.query(
-                  { active: true, windowId: chrome.windows.WINDOW_ID_CURRENT },
+                  { active: true, lastFocusedWindow: true },
                   ([activeTab]: chrome.tabs.Tab[]) => {
                     api.executeScript(activeTab.id, arg1, arg2)
                   }
@@ -409,6 +413,7 @@ export const injectExtensionAPIs = () => {
             WINDOW_ID_NONE: -1,
             WINDOW_ID_CURRENT: -2,
             get: invokeExtension('windows.get'),
+            getCurrent: invokeExtension('windows.getCurrent'),
             getLastFocused: invokeExtension('windows.getLastFocused'),
             getAll: invokeExtension('windows.getAll'),
             create: invokeExtension('windows.create'),
@@ -447,6 +452,7 @@ export const injectExtensionAPIs = () => {
   }
 
   try {
+    // TODO: use another featured/complex name for exposed object
     // Expose extension IPC to main world
     contextBridge.exposeInMainWorld('electron', electronContext)
 
