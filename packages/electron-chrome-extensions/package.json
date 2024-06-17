@@ -17,9 +17,6 @@
     ],
     "repository": "https://github.com/MASQ-Project/electron-browser-shell",
     "author": "Samuel Maddock <sam@samuelmaddock.com>",
-    "contributors": [
-      "MASQ-Project"
-    ],
     "license": "SEE LICENSE IN LICENSE.md",
     "files": [
         "dist"
